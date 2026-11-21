@@ -38,6 +38,13 @@ app.get("/", (_req, res) => {
   res.send("MessWise Backend Running");
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "MessWise API is running",
+  });
+});
+
 app.use("/api/v1", userRoutes);
 app.use("/api/v1/mess", messRoutes);
 
