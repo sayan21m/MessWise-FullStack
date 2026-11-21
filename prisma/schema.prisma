@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Add domain models here, then run: npm run prisma:migrate
+
+enum MessRole {
+  ADMIN
+  MEMBER
+}
+
+enum MessInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+model User {
+  user_id       Int    @id @default(autoincrement())
+  first_name    String
+  last_name     String
+  mail          String @unique
+  password_hash String
+
+  email_verified Boolean @default(false)
+  is_active           Boolean   @default(true)
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLogin           DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messes               Mess[]           @relation("MessCreator")
+  memberships          MessMembership[]
+  sent_invitations     MessInvitation[] @relation("InvitationSender")
+  received_invitations MessInvitation[] @relation("InvitationRecipient")
+  email_verifications  EmailVerification[]
+}
+
+model EmailVerification {
+  verification_id Int       @id @default(autoincrement())
+  user_id         Int
+  token_hash      String    @unique
+  expires_at      DateTime
+  used_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model Mess {
+  mess_id    String @id @default(cuid())
+  mess_name  String
+  mess_code  String @unique
+  created_by Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author      User             @relation("MessCreator", fields: [created_by], references: [user_id])
+  membership  MessMembership[]
+  invitations MessInvitation[]
+
+  @@index([created_by])
+}
+
+model MessMembership {
+  membership_id Int    @id @default(autoincrement())
+  user_id       Int
+  mess_id       String
+
+  role      MessRole @default(MEMBER)
+  joined_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  mess Mess @relation(fields: [mess_id], references: [mess_id], onDelete: Cascade)
+
+  @@unique([user_id, mess_id])
+  @@index([mess_id])
+  @@index([user_id])
+}
+
+model MessInvitation {
+  invitation_id Int @id @default(autoincrement())
+
+  mess_id       String
+  invited_by_id Int
+
+  invited_user_id Int?
+  invited_email   String?
+
+  status MessInvitationStatus @default(PENDING)
+
+  created_at  DateTime  @default(now())
+  expires_at  DateTime
+  accepted_at DateTime?
+
+  mess         Mess  @relation(fields: [mess_id], references: [mess_id], onDelete: Cascade)
+  invited_by   User  @relation("InvitationSender", fields: [invited_by_id], references: [user_id], onDelete: Restrict)
+  invited_user User? @relation("InvitationRecipient", fields: [invited_user_id], references: [user_id], onDelete: SetNull)
+
+  @@index([mess_id])
+  @@index([invited_by_id])
+  @@index([invited_email])
+  @@index([invited_user_id])
+}
