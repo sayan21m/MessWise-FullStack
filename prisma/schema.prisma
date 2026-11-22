@@ -26,7 +26,8 @@ model User {
   first_name    String
   last_name     String
   mail          String @unique
-  password_hash String
+  password_hash String?
+  google_id     String? @unique
 
   email_verified Boolean @default(false)
   is_active           Boolean   @default(true)
@@ -51,6 +52,11 @@ model EmailVerification {
   expires_at      DateTime
   used_at         DateTime?
   created_at      DateTime  @default(now())
+
+  email_sent      Boolean   @default(false)
+  email_attempts  Int       @default(0)
+  next_attempt_at DateTime  @default(now())
+  last_email_error String?
 
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 

@@ -35,3 +35,11 @@ export const loginSchema = z.object({
 
   password: z.string().min(1, "Password is required"),
 });
+
+export const verifyEmailSchema = z.object({
+  token: z.string().trim().min(1, "Verification token is required"),
+});
+
+export const googleLoginSchema = z.object({
+  id_token: z.string().trim().min(1, "Google ID token is required"),
+});

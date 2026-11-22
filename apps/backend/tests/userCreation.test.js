@@ -1,10 +1,14 @@
 import { describe, test, expect } from "@jest/globals";
 import request from "supertest";
 import app from "../src/app.js";
+import prisma from "../src/config/db.js";
+import { generateVerificationToken } from "../src/services/user.service.js";
 
 describe("User Creation and Login API Tests", () => {
   const password = "messWise@123";
-  const uniqueMail = `sayan@messwise.test`;
+  const uniqueMail = `user_${Date.now()}@messwise.test`;
+
+  let verificationToken;
 
   const registerPayload = {
     first_name: "Sayan",
@@ -44,7 +48,75 @@ describe("User Creation and Login API Tests", () => {
     expect(response.body.message).toBe("Validation failed");
   });
 
-  test("should login with correct credentials", async () => {
+  test("should not login before email verification", async () => {
+    const response = await request(app).post("/api/v1/login").send({
+      mail: uniqueMail,
+      password,
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe("Please verify your email before logging in");
+  });
+
+  test("should not verify email with invalid data", async () => {
+    const response = await request(app).post("/api/v1/verify-email").send({
+      token: "",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Validation failed");
+  });
+
+  test("should not verify email with invalid token", async () => {
+    const response = await request(app).post("/api/v1/verify-email").send({
+      token: "invalid-verification-token",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Invalid token");
+  });
+
+  test("should verify email with valid token", async () => {
+    const { token, token_hash } = generateVerificationToken();
+    verificationToken = token;
+
+    const user = await prisma.user.findUnique({
+      where: { mail: uniqueMail },
+    });
+
+    await prisma.emailVerification.updateMany({
+      where: {
+        user_id: user.user_id,
+        used_at: null,
+      },
+      data: {
+        token_hash,
+        expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const response = await request(app).post("/api/v1/verify-email").send({
+      token: verificationToken,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeDefined();
+    expect(response.body.message).toBeDefined();
+    expect(response.body.user).toBeDefined();
+    expect(response.body.user.mail).toBe(uniqueMail);
+    expect(response.body.user.email_verified).toBe(true);
+  });
+
+  test("should not reuse verification token", async () => {
+    const response = await request(app).post("/api/v1/verify-email").send({
+      token: verificationToken,
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Token has already been used");
+  });
+
+  test("should login with correct credentials after verification", async () => {
     const response = await request(app).post("/api/v1/login").send({
       mail: uniqueMail,
       password,

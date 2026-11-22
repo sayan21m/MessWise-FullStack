@@ -1,6 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
 import request from "supertest";
 import app from "../src/app.js";
+import prisma from "../src/config/db.js";
 
 describe("Mess API Tests", () => {
   const mail = "sayan@messwise.test";
@@ -13,6 +14,11 @@ describe("Mess API Tests", () => {
   let messId;
 
   test("should login with correct credentials", async () => {
+    await prisma.user.updateMany({
+      where: { mail },
+      data: { email_verified: true },
+    });
+
     const loginResponse = await request(app).post("/api/v1/login").send({
       mail,
       password,
@@ -179,6 +185,11 @@ describe("Mess API Tests", () => {
   });
 
   test("should login invitee user", async () => {
+    await prisma.user.updateMany({
+      where: { mail: inviteMail },
+      data: { email_verified: true },
+    });
+
     const response = await request(app).post("/api/v1/login").send({
       mail: inviteMail,
       password,

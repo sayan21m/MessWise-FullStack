@@ -5,10 +5,10 @@ const mail = "sayangarai04@gmail.com";
 const password = "messWise@123";
 
 const registerPayload = {
-    first_name: "Sayan",
-    last_name: "Garai",
-    mail: mail,
-    password,
+  first_name: "Sayan",
+  last_name: "Garai",
+  mail: mail,
+  password,
 };
 
 const response = await request(app).post("/api/v1/register").send(registerPayload);
