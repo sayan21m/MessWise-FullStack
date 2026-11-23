@@ -1,5 +1,7 @@
 import prisma from "../config/db.js";
-import { randomInt, randomBytes } from "node:crypto";
+import { randomInt } from "node:crypto";
+import { sendMessInvitationEmail } from "./email.service.js"
+import crypto from "node:crypto";
 
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_LENGTH = 6;
@@ -8,6 +10,20 @@ function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
+}
+
+export function generateInvitationToken() {
+  const token = crypto.randomBytes(32).toString("hex");
+
+  const token_hash = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  return {
+    token,
+    token_hash,
+  };
 }
 
 export const generateMessCode = () => {
@@ -106,6 +122,50 @@ export async function getMessById(user_id, mess_id) {
   return membership;
 }
 
+export async function invitationEmailStatus(
+  invitation_id,
+  invited_email,
+  token,
+  mess_name,
+  user_name
+) {
+  try {
+    await sendMessInvitationEmail(
+      invited_email,
+      token,
+      mess_name,
+      user_name
+    );
+
+    return await prisma.messInvitation.update({
+      where: {
+        invitation_id,
+      },
+      data: {
+        invitation_send: true,
+        invitation_attempts: {
+          increment: 1,
+        },
+        last_invitation_error: null,
+      },
+    });
+  } catch (error) {
+    console.error("Invitation email failed:", error.message);
+
+    return await prisma.messInvitation.update({
+      where: {
+        invitation_id,
+      },
+      data: {
+        invitation_attempts: {
+          increment: 1,
+        },
+        last_invitation_error: error.message,
+      },
+    });
+  }
+}
+
 export async function sendInvitation(invitationData) {
   let { user_id, mess_id, invited_email } = invitationData;
 
@@ -161,6 +221,7 @@ export async function sendInvitation(invitationData) {
   let invitation;
   const expires_at = new Date();
   expires_at.setDate(expires_at.getDate() + 7);
+  const { token, token_hash } = generateInvitationToken();
 
   if (invitedUser) {
     const existingMembership = await prisma.messMembership.findUnique({
@@ -197,9 +258,13 @@ export async function sendInvitation(invitationData) {
         invited_by_id: user_id,
         invited_user_id: invitedUser.user_id,
         invited_email: null,
+        token_hash,
         expires_at,
       },
     });
+
+    invitation = await invitationEmailStatus(invitation.invitation_id, invited_email, token, mess.mess_name, user.first_name);
+
   } else {
     const existingInvitation = await prisma.messInvitation.findFirst({
       where: {
@@ -222,12 +287,23 @@ export async function sendInvitation(invitationData) {
         invited_by_id: user_id,
         invited_user_id: null,
         invited_email: invited_email,
+        token_hash,
         expires_at,
       },
     });
+
+    invitation = await invitationEmailStatus(invitation.invitation_id, invited_email, token, mess.mess_name, user.first_name);
   }
 
-  return invitation;
+  return {
+    invitation_id: invitation.invitation_id,
+    mess_id: invitation.mess_id,
+    invited_email: invitation.invited_email,
+    invited_user_id: invitation.invited_user_id,
+    status: invitation.status,
+    expires_at: invitation.expires_at,
+    invitation_send: invitation.invitation_send,
+  };
 }
 
 export async function getPendingInvitations(user_id) {
@@ -266,4 +342,75 @@ export async function getPendingInvitations(user_id) {
   });
 
   return invitations;
+}
+
+export async function acceptInvitation(user_id, token) {
+  const token_hash = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await prisma.user.findUnique({
+    where: { user_id },
+  });
+
+  if (!user) {
+    throw createError("User not found", 404);
+  }
+
+  if (!user.email_verified) {
+    throw createError("Please verify your email first", 403);
+  }
+
+  const invitation = await prisma.messInvitation.findUnique({
+    where: { token_hash },
+  });
+
+  if (!invitation) {
+    throw createError("Invalid invitation token", 404);
+  }
+
+  if (invitation.status !== "PENDING") {
+    throw createError("Invitation is no longer pending", 400);
+  }
+
+  if (invitation.expires_at <= new Date()) {
+    throw createError("Invitation has expired", 400);
+  }
+
+  if (invitation.used_at) {
+    throw createError("Invitation has already been used", 400);
+  }
+
+  if (invitation.invited_user_id !== null) {
+    if (invitation.invited_user_id !== user.user_id) {
+      throw createError("This invitation belongs to another user", 403);
+    }
+  } else {
+    if (invitation.invited_email !== user.mail.toLowerCase()) {
+      throw createError("This invitation belongs to another user", 403);
+    }
+  }
+
+  const membership = await prisma.$transaction(async (tx) => {
+    const new_membership = await tx.messMembership.create({
+      data: {
+        user_id: user.user_id,
+        mess_id: invitation.mess_id,
+      },
+    });
+
+    await tx.messInvitation.update({
+      where: { invitation_id: invitation.invitation_id },
+      data: {
+        status: "ACCEPTED",
+        used_at: new Date(),
+        accepted_at: new Date(),
+      },
+    });
+
+    return new_membership;
+  });
+
+  return membership;
 }

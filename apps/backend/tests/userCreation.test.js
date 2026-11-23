@@ -1,8 +1,14 @@
-import { describe, test, expect } from "@jest/globals";
-import request from "supertest";
-import app from "../src/app.js";
-import prisma from "../src/config/db.js";
-import { generateVerificationToken } from "../src/services/user.service.js";
+import { describe, expect, jest, test } from "@jest/globals";
+
+jest.unstable_mockModule("../src/services/email.service.js", () => ({
+  sendVerificationEmail: jest.fn().mockResolvedValue("mock-verification-id"),
+  sendMessInvitationEmail: jest.fn().mockResolvedValue("mock-invitation-id"),
+}));
+
+const { default: request } = await import("supertest");
+const { default: app } = await import("../src/app.js");
+const { default: prisma } = await import("../src/config/db.js");
+const { generateVerificationToken } = await import("../src/services/user.service.js");
 
 describe("User Creation and Login API Tests", () => {
   const password = "messWise@123";

@@ -106,6 +106,14 @@ model MessInvitation {
 
   status MessInvitationStatus @default(PENDING)
 
+  token_hash String? @unique
+  used_at    DateTime?
+
+  invitation_send Boolean @default(false)
+  invitation_attempts  Int       @default(0)
+  next_attempt_at DateTime  @default(now())
+  last_invitation_error String?
+
   created_at  DateTime  @default(now())
   expires_at  DateTime
   accepted_at DateTime?

@@ -5,6 +5,7 @@ import {
   getMessByIdController,
   sendInvitationController,
   getPendingInvitationsController,
+  acceptInvitationController,
 } from "../controllers/mess.controller.js";
 import { authenticate } from "../middleware/authenticate.middleware.js";
 import { validate, validateParams } from "../middleware/validate.middleware.js";
@@ -12,6 +13,7 @@ import {
   createMessSchema,
   getMessByIdSchema,
   sendInvitationSchema,
+  acceptInvitationSchema,
 } from "../validators/mess.validator.js";
 
 const router = Router();
@@ -30,5 +32,7 @@ router.post(
 );
 
 router.get("/:mess_id", authenticate, validateParams(getMessByIdSchema), getMessByIdController);
+
+router.post("/accept-invitation", authenticate, validate(acceptInvitationSchema), acceptInvitationController);
 
 export default router;

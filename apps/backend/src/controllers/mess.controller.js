@@ -4,6 +4,7 @@ import {
   getMessById,
   sendInvitation,
   getPendingInvitations,
+  acceptInvitation,
 } from "../services/mess.service.js";
 
 export async function createMessController(req, res) {
@@ -86,6 +87,27 @@ export async function getPendingInvitationsController(req, res) {
     });
   } catch (error) {
     return res.status(error.statusCode || 500).json({
+      message: error.message || "Internal server error",
+    });
+  }
+}
+
+
+export async function acceptInvitationController(req, res) {
+  try {
+    const user_id = req.user.user_id;
+    const { token } = req.body;
+
+    const accepted_invitation = await acceptInvitation(user_id, token);
+
+    return res.status(200).json({
+      success: true,
+      message: "Invitation accepted successfully",
+      data: accepted_invitation,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
       message: error.message || "Internal server error",
     });
   }

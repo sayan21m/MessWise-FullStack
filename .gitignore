@@ -47,3 +47,4 @@ prisma/generated/
 # Uploads (user-generated content)
 uploads/
 apps/backend/storage/
+apps/backend/tests/test.js
