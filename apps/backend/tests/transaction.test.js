@@ -526,4 +526,3 @@ describe("Transaction API Tests", () => {
     expect(response.body.message).toBe("Transaction record not found");
   });
 });
-

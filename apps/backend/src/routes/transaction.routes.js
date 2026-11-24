@@ -1,10 +1,7 @@
 import { Router } from "express";
 
 import { authenticate } from "../middleware/authenticate.middleware.js";
-import {
-  validate,
-  validateParams,
-} from "../middleware/validate.middleware.js";
+import { validate, validateParams } from "../middleware/validate.middleware.js";
 
 import {
   cashInSchema,

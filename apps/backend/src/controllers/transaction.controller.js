@@ -1,4 +1,12 @@
-import { cashIn, cashOut, updateTransaction, getTransactions, getTransactionById, deleteTransaction, getTotalMessBalance } from "../services/transaction.service.js";
+import {
+  cashIn,
+  cashOut,
+  updateTransaction,
+  getTransactions,
+  getTransactionById,
+  deleteTransaction,
+  getTotalMessBalance,
+} from "../services/transaction.service.js";
 
 export async function cashInController(req, res) {
   try {
@@ -46,7 +54,12 @@ export async function updateTransactionController(req, res) {
     const mess_id = req.params.mess_id;
     const transaction_id = Number(req.params.tid);
     const transactionData = req.body;
-    const updatedTransaction = await updateTransaction(user_id, mess_id, transaction_id, transactionData);
+    const updatedTransaction = await updateTransaction(
+      user_id,
+      mess_id,
+      transaction_id,
+      transactionData
+    );
 
     return res.status(200).json({
       success: true,
