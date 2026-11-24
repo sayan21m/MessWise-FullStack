@@ -28,6 +28,7 @@ export const validateParams = (schema) => (req, res, next) => {
 
   if (!result.success) {
     return res.status(400).json({
+      success: false,
       message: "Validation failed",
       errors: result.error.issues.map((issue) => ({
         message: issue.message,
