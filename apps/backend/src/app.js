@@ -6,6 +6,7 @@ import "./config/db.js";
 import { allowedFrontendOrigins, corsOriginDelegate } from "./config/cors.js";
 import userRoutes from "./routes/user.routes.js";
 import messRoutes from "./routes/mess.routes.js";
+import transactionRoutes from "./routes/transaction.routes.js";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.get("/", (_req, res) => {
 
 app.use("/api/v1", userRoutes);
 app.use("/api/v1/mess", messRoutes);
+app.use("/api/v1/mess", transactionRoutes);
 
 app.use((error, _req, res, _next) => {
   if (res.headersSent) {

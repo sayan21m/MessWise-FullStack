@@ -33,6 +33,11 @@ router.post(
 
 router.get("/:mess_id", authenticate, validateParams(getMessByIdSchema), getMessByIdController);
 
-router.post("/accept-invitation", authenticate, validate(acceptInvitationSchema), acceptInvitationController);
+router.post(
+  "/accept-invitation",
+  authenticate,
+  validate(acceptInvitationSchema),
+  acceptInvitationController
+);
 
 export default router;

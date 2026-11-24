@@ -23,7 +23,7 @@ export async function verifyUserEmailController(req, res, next) {
       success: true,
       message: "Email verified successfully",
       user,
-    })
+    });
   } catch (error) {
     next(error);
   }

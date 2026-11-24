@@ -1,6 +1,6 @@
 import prisma from "../config/db.js";
 import { randomInt } from "node:crypto";
-import { sendMessInvitationEmail } from "./email.service.js"
+import { sendMessInvitationEmail } from "./email.service.js";
 import crypto from "node:crypto";
 
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -15,10 +15,7 @@ function createError(message, statusCode) {
 export function generateInvitationToken() {
   const token = crypto.randomBytes(32).toString("hex");
 
-  const token_hash = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+  const token_hash = crypto.createHash("sha256").update(token).digest("hex");
 
   return {
     token,
@@ -130,12 +127,7 @@ export async function invitationEmailStatus(
   user_name
 ) {
   try {
-    await sendMessInvitationEmail(
-      invited_email,
-      token,
-      mess_name,
-      user_name
-    );
+    await sendMessInvitationEmail(invited_email, token, mess_name, user_name);
 
     return await prisma.messInvitation.update({
       where: {
@@ -263,8 +255,13 @@ export async function sendInvitation(invitationData) {
       },
     });
 
-    invitation = await invitationEmailStatus(invitation.invitation_id, invited_email, token, mess.mess_name, user.first_name);
-
+    invitation = await invitationEmailStatus(
+      invitation.invitation_id,
+      invited_email,
+      token,
+      mess.mess_name,
+      user.first_name
+    );
   } else {
     const existingInvitation = await prisma.messInvitation.findFirst({
       where: {
@@ -292,7 +289,13 @@ export async function sendInvitation(invitationData) {
       },
     });
 
-    invitation = await invitationEmailStatus(invitation.invitation_id, invited_email, token, mess.mess_name, user.first_name);
+    invitation = await invitationEmailStatus(
+      invitation.invitation_id,
+      invited_email,
+      token,
+      mess.mess_name,
+      user.first_name
+    );
   }
 
   return {
@@ -345,10 +348,7 @@ export async function getPendingInvitations(user_id) {
 }
 
 export async function acceptInvitation(user_id, token) {
-  const token_hash = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+  const token_hash = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await prisma.user.findUnique({
     where: { user_id },

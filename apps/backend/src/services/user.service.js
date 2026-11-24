@@ -65,7 +65,7 @@ export async function createUser(user_data) {
 
     try {
       await sendVerificationEmail(user.mail, token);
-    
+
       await prisma.emailVerification.update({
         where: {
           verification_id: verification.verification_id,
@@ -76,10 +76,9 @@ export async function createUser(user_data) {
           last_email_error: null,
         },
       });
-    
     } catch (emailError) {
       console.error("Verification email failed:", emailError.message);
-      
+
       await prisma.emailVerification.update({
         where: {
           verification_id: verification.verification_id,

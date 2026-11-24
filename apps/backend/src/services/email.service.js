@@ -87,14 +87,8 @@ export async function sendVerificationEmail(user_email, token) {
   return info.messageId;
 }
 
-export async function sendMessInvitationEmail(
-  invited_email,
-  token,
-  mess_name,
-  inviter_name
-) {
-  const invitation_link =
-    `${process.env.FRONTEND_URL}/accept-invitation?token=${encodeURIComponent(token)}`;
+export async function sendMessInvitationEmail(invited_email, token, mess_name, inviter_name) {
+  const invitation_link = `${process.env.FRONTEND_URL}/accept-invitation?token=${encodeURIComponent(token)}`;
 
   const info = await transporter.sendMail({
     from: `MessWise <${process.env.MAIL_FROM}>`,

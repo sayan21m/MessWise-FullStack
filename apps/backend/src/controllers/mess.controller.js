@@ -92,7 +92,6 @@ export async function getPendingInvitationsController(req, res) {
   }
 }
 
-
 export async function acceptInvitationController(req, res) {
   try {
     const user_id = req.user.user_id;

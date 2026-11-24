@@ -21,6 +21,11 @@ enum MessInvitationStatus {
   EXPIRED
 }
 
+enum TransactionType {
+  CASH_IN
+  CASH_OUT
+}
+
 model User {
   user_id       Int    @id @default(autoincrement())
   first_name    String
@@ -43,6 +48,7 @@ model User {
   sent_invitations     MessInvitation[] @relation("InvitationSender")
   received_invitations MessInvitation[] @relation("InvitationRecipient")
   email_verifications  EmailVerification[]
+  transactions MessTransaction[]
 }
 
 model EmailVerification {
@@ -75,6 +81,7 @@ model Mess {
   author      User             @relation("MessCreator", fields: [created_by], references: [user_id])
   membership  MessMembership[]
   invitations MessInvitation[]
+  transactions MessTransaction[]
 
   @@index([created_by])
 }
@@ -126,4 +133,29 @@ model MessInvitation {
   @@index([invited_by_id])
   @@index([invited_email])
   @@index([invited_user_id])
+}
+
+model MessTransaction {
+  transaction_id Int @id @default(autoincrement())
+
+  mess_id String
+  user_id Int
+
+  transaction_type TransactionType
+  category String @default("Others")
+
+  amount      Decimal  @db.Decimal(12, 2)
+  description String?
+  transaction_date DateTime @default(now())
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  mess Mess @relation(fields: [mess_id], references: [mess_id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Restrict)
+
+  @@index([mess_id])
+  @@index([user_id])
+  @@index([mess_id, transaction_date])
+  @@index([mess_id, transaction_type])
 }

@@ -380,10 +380,7 @@ describe("Mess API Tests", () => {
     const expiredInvitationToken = invitationTokensByEmail.get(expiredMail);
     expect(expiredInvitationToken).toBeDefined();
 
-    const token_hash = crypto
-      .createHash("sha256")
-      .update(expiredInvitationToken)
-      .digest("hex");
+    const token_hash = crypto.createHash("sha256").update(expiredInvitationToken).digest("hex");
 
     await prisma.messInvitation.update({
       where: { token_hash },
@@ -399,4 +396,3 @@ describe("Mess API Tests", () => {
     expect(response.body.message).toBe("Invitation has expired");
   });
 });
-

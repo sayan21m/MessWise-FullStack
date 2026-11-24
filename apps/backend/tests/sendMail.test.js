@@ -43,8 +43,6 @@ describe("Send Mail Tests", () => {
   test("should throw when email sending fails", async () => {
     mockSendMail.mockRejectedValue(new Error("SMTP send failed"));
 
-    await expect(sendVerificationEmail(userEmail, token)).rejects.toThrow(
-      "SMTP send failed"
-    );
+    await expect(sendVerificationEmail(userEmail, token)).rejects.toThrow("SMTP send failed");
   });
 });
