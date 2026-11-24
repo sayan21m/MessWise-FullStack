@@ -106,7 +106,8 @@ export async function updateTransaction(user_id, mess_id, transaction_id, transa
       category: category !== undefined ? category : existingTransaction.category,
       amount: amount !== undefined ? amount : existingTransaction.amount,
       description: description !== undefined ? description : existingTransaction.description,
-      transaction_date: transaction_date !== undefined
+      transaction_date:
+        transaction_date !== undefined
           ? new Date(transaction_date)
           : existingTransaction.transaction_date,
     },
@@ -157,13 +158,13 @@ export async function getTransactionById(user_id, mess_id, transaction_id) {
 
   const transaction = await prisma.messTransaction.findFirst({
     where: {
-        transaction_id,
-        mess_id,
+      transaction_id,
+      mess_id,
     },
   });
 
   if (!transaction) {
-      throw createError("Transaction record not found", 404);
+    throw createError("Transaction record not found", 404);
   }
 
   return transaction;
@@ -188,13 +189,13 @@ export async function deleteTransaction(user_id, mess_id, transaction_id) {
 
   const existingTransaction = await prisma.messTransaction.findFirst({
     where: {
-        transaction_id,
-        mess_id,
+      transaction_id,
+      mess_id,
     },
   });
 
   if (!existingTransaction) {
-      throw createError("Transaction record not found", 404);
+    throw createError("Transaction record not found", 404);
   }
 
   if (membership.role !== "ADMIN") {
